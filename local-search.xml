@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>hexo+typora上传图片最佳解决方案</title>
+    <link href="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/"/>
+    <url>/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</url>
+    
+    <content type="html"><![CDATA[<h2 id="hexo-typora上传图片最佳解决方案"><a href="#hexo-typora上传图片最佳解决方案" class="headerlink" title="hexo-typora上传图片最佳解决方案"></a>hexo-typora上传图片最佳解决方案</h2><p>无需图床，完美解决方案</p><h2 id="问题引入"><a href="#问题引入" class="headerlink" title="问题引入"></a>问题引入</h2><p>hexo + Typora图片上传不显示的问题；<strong>此方法解决了，本地和远端图片路径不一致问题，导致无法两端无法兼容</strong></p><p><strong>传统方案：</strong></p><p>导致本地文档图片引用失效</p><p><img src="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/image-20220311031244873.png" alt="image-20220311031244873"></p><h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p><strong>一：</strong>如下修改 Hexo 博客目录中的 <code>_config.yml</code>，打开这个配置是为了在生成文章的时候生成一个同名的资源目录用于存放图片文件。</p><ol><li>DSS</li></ol><figure class="highlight yaml"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-comment"># 打开这个配置是为了在生成文章的时候生成一个同名的资源目录用于存放图片文件</span><br><span class="hljs-attr">post_asset_folder:</span> <span class="hljs-literal">true</span><br></code></pre></td></tr></table></figure><p><img src="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/image-20220311030240469.png" alt="image-20220311030240469"></p><p> <strong>二：</strong>安装hexo-asset-image</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">npm install hexo-asset-image --save<br></code></pre></td></tr></table></figure><p><strong>三：</strong>修改该插件目录下的index.js文件</p><p><img src="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/image-20220311030809910.png" alt="image-20220311030809910"></p><p><strong>四：</strong>修改typora的图片存储路径</p><p><img src="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/image-20220311031000374.png" alt="image-20220311031000374"></p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>hexo</tag>
+      
+      <tag>typora</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  
+</search>
