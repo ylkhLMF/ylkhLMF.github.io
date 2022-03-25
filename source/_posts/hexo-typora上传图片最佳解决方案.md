@@ -1,6 +1,7 @@
 ---
 title: hexo+typora上传图片最佳解决方案
 date: 2022-03-11 02:52:03
+index_img: /img/hexo.jpg
 tags: [hexo, typora]
 categories: hexo
 ---

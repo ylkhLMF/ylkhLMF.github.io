@@ -1,6 +1,7 @@
 ---
 title: {{ title }}
 date: {{ date }}
-tags:
+tags: 
+index_img: 
 categories:
 ---

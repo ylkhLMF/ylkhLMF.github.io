@@ -2,6 +2,7 @@
 title: hexo模版修改
 date: 2022-03-14 00:06:43
 tags: hexo
+index_img: /img/hexo.jpg
 categories: hexo
 
 ---
