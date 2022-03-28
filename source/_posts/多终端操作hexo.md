@@ -1,7 +1,7 @@
 ---
 title: 多终端操作hexo
 date: 2022-03-14 00:58:31
-tags: hexo 多终端操作
+tags: [hexo]
 index_img: /img/hexo.jpg
 categories: hexo
 ---
