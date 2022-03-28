@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>IOC容器简单实现</title>
+    <link href="/2022/03/28/IOC%E5%AE%B9%E5%99%A8%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0/"/>
+    <url>/2022/03/28/IOC%E5%AE%B9%E5%99%A8%E7%AE%80%E5%8D%95%E5%AE%9E%E7%8E%B0/</url>
+    
+    <content type="html"><![CDATA[<p>Spring IOC 对象实例化模拟实现</p><span id="more"></span><h2 id="梳理思路"><a href="#梳理思路" class="headerlink" title="梳理思路"></a>梳理思路</h2><ol><li>创建配置文件</li><li>创建工厂类，使用dom4j解析配置文件</li><li>反射创建对象，根据id放入全局的map</li><li>根据配置id获取class实例</li></ol><h2 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h2><h3 id="一、创建配置文件，并固定配置文件dom节点"><a href="#一、创建配置文件，并固定配置文件dom节点" class="headerlink" title="一、创建配置文件，并固定配置文件dom节点"></a>一、创建配置文件，并固定配置文件dom节点</h3><p>创建my_spring.xml,并创建两个java类配置进去</p><figure class="highlight xml"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></div></td><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;</span><br><br><span class="hljs-tag">&lt;<span class="hljs-name">beans</span>&gt;</span><br><br>    <span class="hljs-tag">&lt;<span class="hljs-name">bean</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;userDao&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;org.liumf.dao.UserDao&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">bean</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">bean</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;userService&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;org.liumf.service.UserService&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">bean</span>&gt;</span><br><br><span class="hljs-tag">&lt;/<span class="hljs-name">beans</span>&gt;</span><br></code></pre></td></tr></table></figure><h3 id="二、创建工厂"><a href="#二、创建工厂" class="headerlink" title="二、创建工厂"></a>二、创建工厂</h3><ul><li><p>创建java Bean，配置文件的属性值包含 id和class两个属性，我们需要一个java bean去承载</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Getter</span><br><span class="hljs-meta">@Setter</span><br><span class="hljs-meta">@NoArgsConstructor</span><br><span class="hljs-meta">@AllArgsConstructor</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MyBean</span> &#123;<br><br>    <span class="hljs-keyword">private</span> String id;<br>    <span class="hljs-keyword">private</span> String clazz;<br>&#125;<br><br></code></pre></td></tr></table></figure></li><li><p>根据spring的配置获取方式分析，我们需要一个工厂,同时需要个构造器去传入文件名称</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-type">ApplicationContext</span> <span class="hljs-variable">ac</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ClassPathXmlApplicationContext</span>(<span class="hljs-string">&quot;springContext.xml&quot;</span>);<br></code></pre></td></tr></table></figure></li><li><p>创建工厂接口</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">MyFactory</span> &#123;<br>     Object <span class="hljs-title function_">getBean</span><span class="hljs-params">(String id)</span>;<br>&#125;<br></code></pre></td></tr></table></figure></li><li><p>工厂实现</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 1.通过构造器传入要解析的xml</span><br><span class="hljs-comment"> * 2.解析配置文件得到对应的id和class,并放入集合中</span><br><span class="hljs-comment"> * 3.遍历集合得到每一个对象，实例化对象，并存入map</span><br><span class="hljs-comment"> * 4.根据id获取bean</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MyClassPathXmlApplicationContext</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">MyFactory</span> &#123;<br><br>    <span class="hljs-comment">// 全局map,存放id和实例化对象</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Map&lt;String,Object&gt; map  =<span class="hljs-keyword">new</span> <span class="hljs-title class_">HashMap</span>(<span class="hljs-number">16</span>);<br><br>    <span class="hljs-comment">// 存放id和clazz 对象的映射关系</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> List&lt;MyBean&gt; list = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;(<span class="hljs-number">16</span>);<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">MyClassPathXmlApplicationContext</span><span class="hljs-params">()</span> &#123;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 解析配置文件，得到实例化对象</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> fileName</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">MyClassPathXmlApplicationContext</span><span class="hljs-params">(String fileName)</span> &#123;<br><br>        <span class="hljs-comment">// 1.解析xml</span><br>        parseXml(fileName);<br>        <span class="hljs-comment">// 2.反射实例化对象</span><br>        instanceBean();<br>    &#125;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 1. 解析xml</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> fileName</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">parseXml</span><span class="hljs-params">(String fileName)</span>&#123;<br>        <span class="hljs-type">SAXReader</span> <span class="hljs-variable">reader</span> <span class="hljs-operator">=</span><span class="hljs-keyword">new</span> <span class="hljs-title class_">SAXReader</span>();<br>        <span class="hljs-comment">// 获取对应配置文件的地址</span><br>        <span class="hljs-type">URL</span> <span class="hljs-variable">resourceURL</span> <span class="hljs-operator">=</span> <span class="hljs-built_in">this</span>.getClass().getClassLoader().getResource(fileName);<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-type">Document</span> <span class="hljs-variable">doc</span> <span class="hljs-operator">=</span> reader.read(resourceURL);<br>            <span class="hljs-type">XPath</span> <span class="hljs-variable">xPath</span> <span class="hljs-operator">=</span> doc.createXPath(<span class="hljs-string">&quot;beans/bean&quot;</span>);<br>            List&lt;Element&gt; elements = xPath.selectNodes(doc);<br>            <span class="hljs-keyword">if</span> (!CollectionUtils.isEmpty(elements))&#123;<br>                <span class="hljs-keyword">for</span> (Element element : elements) &#123;<br>                   <span class="hljs-built_in">this</span>.list.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">MyBean</span>(element.attributeValue(<span class="hljs-string">&quot;id&quot;</span>), element.attributeValue(<span class="hljs-string">&quot;class&quot;</span>)));<br>                &#125;<br>            &#125;<br>        &#125; <span class="hljs-keyword">catch</span> (DocumentException e) &#123;<br>            e.printStackTrace();<br>        &#125;<br><br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 2.实例化bean，并放入map中</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">instanceBean</span><span class="hljs-params">()</span>  &#123;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-literal">null</span> !=list &amp;&amp; list.size()&gt;<span class="hljs-number">0</span>)&#123;<br>            <span class="hljs-keyword">for</span> (MyBean myBean : list) &#123;<br>                <span class="hljs-keyword">try</span>&#123;<br>                    map.put(myBean.getId(), Class.forName(myBean.getClazz()).getDeclaredConstructor().newInstance());<br>                &#125;<span class="hljs-keyword">catch</span> (Exception e)&#123;<br>                    e.printStackTrace();<br>                &#125;<br>            &#125;<br><br>        &#125;<br>    &#125;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 3.从map中获取指定的bean</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> id</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> Object <span class="hljs-title function_">getBean</span><span class="hljs-params">(String id)</span> &#123;<br>        <span class="hljs-keyword">return</span> map.get(id);<br>    &#125;<br>&#125;<br><br><br></code></pre></td></tr></table></figure></li></ul><h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;<br><br>    <span class="hljs-type">MyFactory</span> <span class="hljs-variable">context</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">MyClassPathXmlApplicationContext</span>(<span class="hljs-string">&quot;my_spring.xml&quot;</span>);<br><br>    <span class="hljs-type">UserDao</span> <span class="hljs-variable">userDao</span> <span class="hljs-operator">=</span> (UserDao)context.getBean(<span class="hljs-string">&quot;userDao&quot;</span>);<br><br>    userDao.userDaoTest();<br><br>&#125;<br></code></pre></td></tr></table></figure><p>​     </p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Spring</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Spring</tag>
+      
+      <tag>IOC</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>多终端操作hexo</title>
+    <link href="/2022/03/14/%E5%A4%9A%E7%BB%88%E7%AB%AF%E6%93%8D%E4%BD%9Chexo/"/>
+    <url>/2022/03/14/%E5%A4%9A%E7%BB%88%E7%AB%AF%E6%93%8D%E4%BD%9Chexo/</url>
+    
+    <content type="html"><![CDATA[<p>hexo 多终端操作解决方案</p><span id="more"></span><p>一、先 github上新建一个hexo分支，如新建hexo分支，把此分支设置为默认分支（这样每次同步的时候就不用指定分支，比较方便）。<img src="/2022/03/14/%E5%A4%9A%E7%BB%88%E7%AB%AF%E6%93%8D%E4%BD%9Chexo/image-20220314010210584.png" alt=""></p><p><img src="/2022/03/14/%E5%A4%9A%E7%BB%88%E7%AB%AF%E6%93%8D%E4%BD%9Chexo/image-20220314010352862.png" alt="image-20220314010352862"></p><p>二、在本地的任意目录下，打开git bash，将其克隆到本地，因为默认分支已经设成了hexo，所以clone时只clone了hexo；，把除了.git 文件夹外的所有文件都删掉，把之前我们写的博客源文件全部复制过来，除了<code>.deploy_git</code>，复制过来的源文件应该有一个<code>.gitignore</code>，用来忽略一些不需要的文件，如果没有的话，自己新建一个，如下</p><figure class="highlight java"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></div></td><td class="code"><pre><code class="hljs java">.DS_Store<br>Thumbs.db<br>db.json<br>*.log<br>node_modules/<br><span class="hljs-keyword">public</span>/<br>.deploy*/<br>_multiconfig.yml<br></code></pre></td></tr></table></figure><p>三、上传当前分支的修改</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs java"><br>git add .<br>git commit –m <span class="hljs-string">&quot;hexo 分支初始化&quot;</span><br>git push<br></code></pre></td></tr></table></figure><p>四、新的终端操作,确保新的终端已经安装了node，npm</p><ul><li><p>安装hexo</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shel">sudo npm install hexo-cli -g<br><br></code></pre></td></tr></table></figure></li><li><p>clone 下来hexo分支</p></li><li><p>进入到clone的文件夹,安装依赖</p></li></ul><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash"><br><span class="hljs-built_in">cd</span> xxx.github.io<br>npm install<br></code></pre></td></tr></table></figure><p>五、特殊配置（第三步时候，由于我修改了node_modules中的文件，所以需要把主题插件和image插件copy过来，如果未修改，可以忽略此步骤），替换安装的局部依赖中的文件</p><p><img src="/2022/03/14/%E5%A4%9A%E7%BB%88%E7%AB%AF%E6%93%8D%E4%BD%9Chexo/image-20220314011228731.png" alt="image-20220314011228731"></p><p>六、生成、查看、部署</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 生成文件</span><br>hexo g<br><span class="hljs-comment"># 本地预览</span><br>hexo s<br><span class="hljs-comment"># 部署</span><br>hexo d<br></code></pre></td></tr></table></figure><p><strong>Tips：</strong></p><ol><li>不要忘了，每次写完最好都把源文件上传一下，因为hexo d 部署的master 分支， 我们写作的文件在hexo分支，所以修改新增文章后需要把最新的文件上传到远端分支</li><li>换电脑操作时候，记得 首先把远端的文件pull下来，再操作，因为部署到githubpage 的文件是在本地生成的</li></ol>]]></content>
+    
+    
+    <categories>
+      
+      <category>hexo</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>hexo</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>hexo模版修改</title>
+    <link href="/2022/03/14/hexo%E6%A8%A1%E7%89%88%E4%BF%AE%E6%94%B9/"/>
+    <url>/2022/03/14/hexo%E6%A8%A1%E7%89%88%E4%BF%AE%E6%94%B9/</url>
+    
+    <content type="html"><![CDATA[<p>hexo 创建文档模版修改</p><span id="more"></span><p>使用hexo n “文章名称”新建文章时候默认模版为</p><figure class="highlight shell"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><pre><code class="hljs SHELL">title: &#123;&#123; title &#125;&#125;<br>date: &#123;&#123; date &#125;&#125;<br>tags:<br></code></pre></td></tr></table></figure><p>此时，默认模版是不包含<strong>分类</strong>标签的，我们可以手动修改模版文件。</p><p>模版文件地址为caffolds&#x2F;post.md；</p><p>只需要修改模版添加categories:就能达到创建新文章时包含分类属性</p><p><img src="/2022/03/14/hexo%E6%A8%A1%E7%89%88%E4%BF%AE%E6%94%B9/image-20220314001956592.png" alt="image-20220314001956592"></p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">title: &#123;&#123; title &#125;&#125;<br>date: &#123;&#123; date &#125;&#125;<br>tags:<br>categories:<br></code></pre></td></tr></table></figure>]]></content>
+    
+    
+    <categories>
+      
+      <category>hexo</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>hexo</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>hexo+typora上传图片最佳解决方案</title>
+    <link href="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/"/>
+    <url>/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</url>
+    
+    <content type="html"><![CDATA[<p>hexo-typora上传图片最佳解决方案,无需图床</p><span id="more"></span><h2 id="问题引入"><a href="#问题引入" class="headerlink" title="问题引入"></a>问题引入</h2><p>hexo + Typora图片上传不显示的问题；<strong>此方法解决了，本地和远端图片路径不一致问题，导致无法两端无法兼容</strong></p><p><strong>传统方案：</strong></p><p>导致本地文档图片引用失效</p><p><img src="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/image-20220311031244873.png" alt="image-20220311031244873"></p><h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p><strong>一：</strong>如下修改 Hexo 博客目录中的 <code>_config.yml</code>，打开这个配置是为了在生成文章的时候生成一个同名的资源目录用于存放图片文件。</p><ol><li>DSS</li></ol><figure class="highlight yaml"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-comment"># 打开这个配置是为了在生成文章的时候生成一个同名的资源目录用于存放图片文件</span><br><span class="hljs-attr">post_asset_folder:</span> <span class="hljs-literal">true</span><br></code></pre></td></tr></table></figure><p><img src="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/image-20220311030240469.png" alt="image-20220311030240469"></p><p> <strong>二：</strong>安装hexo-asset-image</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">npm install hexo-asset-image --save<br></code></pre></td></tr></table></figure><p><strong>三：</strong>修改该插件目录下的index.js文件</p><p><img src="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/image-20220311030809910.png" alt="image-20220311030809910"></p><p><strong>四：</strong>修改typora的图片存储路径</p><p><img src="/2022/03/11/hexo-typora%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87%E6%9C%80%E4%BD%B3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/image-20220311031000374.png" alt="image-20220311031000374"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>hexo</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>hexo</tag>
+      
+      <tag>typora</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  
+</search>
