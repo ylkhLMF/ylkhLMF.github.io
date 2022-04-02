@@ -7,6 +7,12 @@ categories: hexo
 
 ---
 
+hexo 创建文档模版修改
+
+<!-- more -->
+
+
+
 使用hexo n "文章名称"新建文章时候默认模版为
 
 ```SHELL
