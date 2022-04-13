@@ -155,7 +155,7 @@
 </nav>
 
     <div class="banner" id="banner" parallax=true
-         style="background: url('https://rmt.dogedoge.com/fetch/fluid/storage/bg/vdysjx.png?w=1920&fmt=webp') no-repeat center center;
+         style="background: url('https://rmt.dogedoge.com/fetch/fluid/storage/bg/vdysjx.png') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
@@ -188,6 +188,63 @@
               <div class="col-12 col-md-10 m-auto">
                 
 
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/04/11/%E6%B3%A8%E8%A7%A3%E5%92%8C%E5%8F%8D%E5%B0%84/" target="_self">
+          <img src="/img/fs.jpg" srcset="/img/loading.gif" lazyload alt="注解和反射">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/04/11/%E6%B3%A8%E8%A7%A3%E5%92%8C%E5%8F%8D%E5%B0%84/" target="_self">
+          注解和反射
+        </a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2022/04/11/%E6%B3%A8%E8%A7%A3%E5%92%8C%E5%8F%8D%E5%B0%84/" target="_self">
+          
+          Java 注解（Annotation）又称 Java 标注，是 JDK5.0 引入的一种注释机制。
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-04-11 16:58" pubdate>
+              2022-04-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/Java/">Java</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Java/">Java</a>
+            
+              <a href="/tags/%E5%8F%8D%E5%B0%84/">反射</a>
+            
+              <a href="/tags/%E6%B3%A8%E8%A7%A3/">注解</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
 
   <div class="row mx-auto index-card">
     
@@ -597,7 +654,34 @@
       var typing = Fluid.plugins.typing;
       var title = document.getElementById('subtitle').title;
       
-        typing(title);
+      jQuery.ajax({
+        type: 'GET',
+        url: 'https://v1.hitokoto.cn/?c=j&amp;c=f',
+        headers: {},
+        dataType: 'json',
+        success: function(result) {
+          var text;
+          if (result) {
+            var keys = 'hitokoto'.split(',');
+            if (result instanceof Array) {
+              result = result[0];
+            }
+            for (const k of keys) {
+              var value = result[k];
+              if (typeof value === 'string') {
+                text = value;
+                break;
+              } else if (value instanceof Object) {
+                result = value;
+              }
+            }
+          }
+          text ? typing(text) : typing(title);
+        },
+        error: function() {
+          typing(title);
+        }
+      })
       
     })(window, document);
   </script>
